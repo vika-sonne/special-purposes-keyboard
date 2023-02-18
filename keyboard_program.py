@@ -16,10 +16,14 @@ VENDOR, PRODUCT = 0x1189, 0x8890
 # Programming sequences
 START = '03000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000'
 PREF = '03a10100 00000000 00000000 00000000 00000000 00000000 00000000 00000000'
-# KEYkmsc: key number, keys count, key sequence index, special keys (1 CTRL, 2 SHIFT, 4 ALT, 8 META/WIN), code
+# kcisc: key number, keys count, key sequence index, special keys (1 CTRL, 2 SHIFT, 4 ALT, 8 META/WIN), code (see SYMBOLS_CODES)
 KEYkcisc = '03{:02X}11{:02X} {:02X}{:02X}{:02X}00 00000000 00000000 00000000 00000000 00000000 00000000'
-# MOUSEkbws: key number, mouse button (1 LEFT, 2 RIGHT, 4 MIDDLE), mouse weel (1 UP, 0xFF DOWN), special keys (1 CTRL, 2 SHIFT, 4 ALT)
+# kbws: key number, mouse button (1 LEFT, 2 RIGHT, 4 MIDDLE), mouse weel (1 UP, 0xFF DOWN), special keys (1 CTRL, 2 SHIFT, 4 ALT)
 MOUSEkbws = '03{:02X}13{:02X} 0000{:02X}{:02X} 00000000 00000000 00000000 00000000 00000000 00000000'
+# kc: key number, code (see SPECIALS_CODES_12)
+KEY12kc = '03{:02X}12{:02X} 00000000 00000000 00000000 00000000 00000000 00000000 00000000'
+# m: mode (0, 1, 2)
+LEDm = '03b018{:02X} 00000000 00000000 00000000 00000000 00000000 00000000 00000000'
 POST = '03aaaa00 00000000 00000000 00000000 00000000 00000000 00000000 00000000'
 
 # Keyboard parameters
@@ -33,12 +37,32 @@ ENCODERS_KEYS = (
 		0x0F,
 		0x0E,
 	),
+	(
+		0x10,
+		0x12,
+		0x11,
+	),
 )
 
-ENCODERS_KINDS = ("left ", "right", "press")
+ENCODERS_KINDS = ('left', 'right', 'press')
 ENCODERS_KINDS_MAX_LEN = max(len(x) for x in ENCODERS_KINDS)
 
-# Symbols codes: keyboard key symbol to code
+def get_encoder_to_key(number: int, kind: int | str) -> int | None:
+	'''
+	number -:- 1.. encoder (knob) number
+	kind   -:- encoder kind (0 or "left", 1 or "right", 2 or "press")
+	'''
+	if isinstance(kind, str):
+		kind = kind.lower()
+		if kind not in ENCODERS_KINDS:
+			return None
+		kind = ENCODERS_KINDS.index(kind)
+	if 0 < number <= len(ENCODERS_KEYS):
+		return ENCODERS_KEYS[number - 1][kind]
+	return None
+
+
+# Symbols codes (11): keyboard key symbol to code
 SYMBOLS_CODES = {
 	# first row with F keys
 	'esc': 0x29,
@@ -54,6 +78,17 @@ SYMBOLS_CODES = {
 	'f10': 0x43,
 	'f11': 0x44,
 	'f12': 0x45,
+	'f14': 0x69,
+	'f15': 0x6A,
+	'f16': 0x6B,
+	'f17': 0x6C,
+	'f18': 0x6D,
+	'f19': 0x6E,
+	'f20': 0x6F,
+	'f21': 0x70,
+	'f22': 0x71,
+	'f23': 0x72,
+	'f24': 0x73,
 	'prtscn': 0x47,
 	'scrolllock': 0x47,
 	'pause': 0x48,
@@ -101,7 +136,7 @@ SYMBOLS_CODES = {
 	'x': 0x1B,
 	'y': 0x1C,
 	'z': 0x1D,
-	' ': 0x2C,
+	'space': 0x2C,
 	# control keys of letter block
 	'tab': 0x2B,
 	'capslock': 0x39,
@@ -111,7 +146,7 @@ SYMBOLS_CODES = {
 	']}': 0x30,
 	'\|': 0x31,
 	';:': 0x33,
-	'\'"': 0x34,
+	'bracket': 0x34,
 	',<': 0x36,
 	'.>': 0x37,
 	'/?': 0x38,
@@ -157,7 +192,7 @@ def get_symbol_code(symbol: str | None) -> int | None:
 	'Gets code from keyboard symbol'
 	if symbol is not None and (code := SYMBOLS_CODES.get(symbol.lower() if symbol else ' ')):
 		return code
-	print(f'Unknow code for symbol "{symbol}", skip this programming')
+	print(f'! Unknown code for symbol "{symbol}", skip this programming')
 	return None
 
 def get_codes_and_special_keys(value: str) -> tuple[int | list[int], int] | None:
@@ -192,7 +227,9 @@ def get_codes_and_special_keys(value: str) -> tuple[int | list[int], int] | None
 			if (code := get_symbol_code(symbol)):
 				codes.append(code)
 
-	return codes if len(codes) > 1 else codes[0], special_keys_value
+	if codes:
+		return codes if len(codes) > 1 else codes[0], special_keys_value
+	return codes, special_keys_value
 
 def dump_special_keys(special_keys: int) -> str:
 	ret = ''
@@ -205,6 +242,25 @@ def dump_special_keys(special_keys: int) -> str:
 	if special_keys & 8:
 		ret += 'META+'
 	return ret[:-1] if ret else 'none'
+
+
+# Special codes (12): keyboard key symbol to code
+SPECIALS_CODES_12 = {
+	'play/pause': 0xcd,
+	'play': 0xcd,
+	'pause': 0xcd,
+	'mute': 0xe2,
+	'volume+': 0xe9,
+	'volume-': 0xea,
+	'nextsong': 0xb5,
+	'prevsong': 0xb6,
+}
+
+def get_special_code_12(symbol: str | None) -> int | None:
+	'Gets code from SPECIALS_CODES_12'
+	if symbol is not None and (code := SPECIALS_CODES_12.get(symbol.lower())):
+		return code
+	return None
 
 
 def bind_key_to_symbol_code(key: int, symbol_code: int | list[int], special_keys: int = 0):
@@ -259,18 +315,30 @@ def bind_key(key: int, symbol_code: int | list[int], special_keys: int = 0):
 def bind_encoder(number: int, kind: int, symbol_code: int | list[int], special_keys: int = 0):
 	if verbose > 1:
 		print(f'Encoder {number} {ENCODERS_KINDS[kind]} programming')
-	if 0 < number <= len(ENCODERS_KEYS):
-		bind_key_to_symbol_code(ENCODERS_KEYS[number - 1][kind], symbol_code, special_keys)
+	if (key := get_encoder_to_key(number, kind)):
+		bind_key_to_symbol_code(key, symbol_code, special_keys)
+	else:
+		print(f'Skip encoder programming. Encoder number out of range 1..{len(ENCODERS_KEYS)}: {number}')
+
+def bind_encoder_special_12(number: int, kind: str, code: int):
+	if verbose > 1:
+		print(f'Encoder {number} {kind} programming')
+	if (key := get_encoder_to_key(number, kind)):
+		bind_key_to_special_code_12(key, code)
 	else:
 		print(f'Skip encoder programming. Encoder number out of range 1..{len(ENCODERS_KEYS)}: {number}')
 
 def bind_encoder_config_section(section: object, number: int):
+	'bind encoder according to section of config file'
 
 	def get_section_symbol_code(section: object, section_key: str) -> tuple[int | list[int], int] | None:
 		'Gets code from section & key of config file'
 		if (key_value := section.get(section_key)):
 			if verbose:
 				print(f'Encoder {number} {section_key:{ENCODERS_KINDS_MAX_LEN}} programming to "{key_value}"')
+			if (code := get_special_code_12(key_value)):
+				bind_encoder_special_12(number, section_key, code)
+				return None
 			return get_codes_and_special_keys(key_value)
 		return None
 
@@ -281,17 +349,29 @@ def bind_encoder_config_section(section: object, number: int):
 	if (codes_and_special_keys := get_section_symbol_code(section, 'press')):
 		bind_encoder(number, 2, codes_and_special_keys[0], codes_and_special_keys[1])
 
+def bind_key_to_special_code_12(key: int, code: int):
+	'''
+	key          -:- 1..KEYS_MAX_COUNT
+	symbol_code  -:- code
+	'''
+	key, code = key & 0xFF, code & 0xFF
+	if verbose > 1:
+		print(f'	Bind KEY{key:02} to special 12 code=0x{code:02X}')
+	if not dry:
+		ep.write(bytearray.fromhex(PREF))
+		ep.write(bytearray.fromhex(KEY12kc.format(key, code)))
+		ep.write(bytearray.fromhex(POST))
+
 
 # process command-line
 
 def parse_args() -> object:
 	parser = ArgumentParser(
 		description='Programming utility of special purposes keyboard with encoders and keys.'
-		, epilog=f'Special keys: CTRL, SHIFT, ALT, META or WIN. Example: "ctrl+shift+alt+meta+<-" or "c+s+a+m+<-". Example multi-key sequence: "a,b,c" or "c+s+a+m+a,b,c". Known special keyboard USB Vendor:Product: {VENDOR:02X}:{PRODUCT:02X}. Known symbols:\n{", ".join("{}".format(s if s.strip() else "[_]") for s in SYMBOLS_CODES)}')
+		, epilog=f'Special keys: CTRL, SHIFT, ALT, META or WIN. Example: "ctrl+shift+alt+meta+<-" or "c+s+a+m+<-". Example multi-key sequence: "a,b,c" or "c+s+a+m+a,b,c". Known special keyboard USB Vendor:Product: {VENDOR:02X}:{PRODUCT:02X}. Known symbols:\n{", ".join("{}".format(s) for s in SYMBOLS_CODES)}, {", ".join("{}".format(s) for s in SPECIALS_CODES_12)}')
 	parser.add_argument('-l', '--layout', metavar='FILEPATH', default=DEFAULT_LAYOUT_FILEPATH, help=f'keyboard layout file path; default: {DEFAULT_LAYOUT_FILEPATH}')
 	parser.add_argument('-d', '--dry', action='store_true', help=f'don\'t iteract with keyboard. Set this option to validate keyboard layout file')
 	parser.add_argument('-v', '--verbose', '-v', action='count', default=0, help='verbose level; use multiple times to increase log level; example: -vv')
-	# parser.epilog = f'Known USB Vendor:Product: {VENDOR:02X}:{PRODUCT:02X}. Known symbols:\n{", ".join("{}".format(s if s.strip() else "[_]") for s in SYMBOLS_CODES)}'
 	return parser.parse_args()
 
 args = parse_args()
@@ -319,7 +399,14 @@ if not dry:
 		print('SPECIAL KEYBOARD CONNECTED')
 
 	# get output USB endpoint
-	cfg = dev.get_active_configuration()
+	try:
+		cfg = dev.get_active_configuration()
+	except USBError as e:
+		if e.errno == 13:
+			print('! Access to USB denied:')
+			print(e)
+			exit(e.errno)
+		raise
 	# print(f'{cfg=}')
 	i = cfg.interfaces()[1]
 	# print(f'{i=}')
@@ -349,7 +436,11 @@ for section in config:
 			except ValueError:
 				print(f'Wrong key number "{number}", skip this programming')
 			else:
-				if (codes_and_special_keys := get_codes_and_special_keys(symbol)):
+				if (code := get_special_code_12(symbol)):
+					if verbose:
+						print(f'Key {number:02} programming to "{symbol}"')
+					bind_key_to_special_code_12(number, code)
+				elif (codes_and_special_keys := get_codes_and_special_keys(symbol)) and codes_and_special_keys[0]:
 					if verbose:
 						print(f'Key {number:02} programming to "{symbol}"')
 					bind_key(number, codes_and_special_keys[0], codes_and_special_keys[1])

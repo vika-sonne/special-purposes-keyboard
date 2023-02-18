@@ -13,26 +13,33 @@ _____________________________________________________
 ## Advantages of this utility
 - You may have several layout files.
 - Not need to use GUI to program and even for edit layout file (Unix way :robot:).
-- Multy-OS usage. Feel free. :cowboy_hat_face:
+- Multi-OS usage. Feel free. :cowboy_hat_face:
 
 # Layout file
 
 Key programming pattern:
 
-`key=symbol`
+```
+key=symbol
 
   where:
-
-`key` - special purposes keyboard key;
-
-`symbol` - action to do.
+key    - special purposes keyboard key;
+symbol - keyboard/mouse action to do.
+```
 
  ### Symbols examples:
  ```
- multi-key sequence: a,b,c
- with special keys: ctrl+shift+alt+meta+a
- the same: c+s+a+m+a
- multi-key sequence: c+s+a+m+a,b,c
+ multi-key sequence:
+ a,b,c
+ 
+ with special keys:
+ ctrl+shift+alt+meta+a
+ 
+ the same:
+ c+s+a+m+a
+ 
+ multi-key sequence:
+ c+s+a+m+a,b,c
 ```
  For knob programming use section with name `Kn` for knob `n`. Example:
  ```
@@ -50,7 +57,9 @@ press=enter
 ```
 Available knobs and keys depends of special purposes keyboard model.
 
-See layout file complete example: [layout.ini](/layout.ini).
+See layout file complete example: [layout.ini](/layout.ini)
+
+And another example: [layout_volume_play.ini](/layout_volume_play.ini)
 
 # Programming
 Be aware that USB subsystem access needs relevant rights. `sudo` for Kubuntu.
@@ -74,10 +83,15 @@ options:
   -d, --dry             don't iteract with keyboard. Set this option to validate keyboard layout file
   -v, --verbose, -v     verbose level; use multiple times to increase log level; example: -vv
 
-Special keys: CTRL, SHIFT, ALT, META or WIN. Example: "ctrl+shift+alt+meta+<-" or "c+s+a+m+<-". Example multi-key sequence: "a,b,c" or "c+s+a+m+a,b,c". Known special keyboard USB Vendor:Product: 1189:8890. Known symbols: esc, f1, f2,
-f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, prtscn, scrolllock, pause, tilda, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, -, minus, +, plus, backspace, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, [_], tab, capslock,
-enter, [{, ]}, \|, ;:, '", ,<, .>, /?, ins, del, home, end, pgup, pgdn, ->, <-, arrowdn, arrowup, numlock, numdiv, nummul, num-, num+, num., menu, num1, num2, num3, num4, num5, num6, num7, num8, num9, num0, mouseleft, mouseright,
-mousemiddle, mouseweelup, mouseweeldn
+Special keys: CTRL, SHIFT, ALT, META or WIN. Example: "ctrl+shift+alt+meta+<-" or "c+s+a+m+<-". Example
+multi-key sequence: "a,b,c" or "c+s+a+m+a,b,c". Known special keyboard USB Vendor:Product: 1189:8890.
+Known symbols: esc, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f14, f15, f16, f17, f18, f19,
+f20, f21, f22, f23, f24, prtscn, scrolllock, pause, tilda, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, -, minus, +,
+plus, backspace, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, space,
+tab, capslock, enter, [{, ]}, \|, ;:, bracket, ,<, .>, /?, ins, del, home, end, pgup, pgdn, ->, <-,
+arrowdn, arrowup, numlock, numdiv, nummul, num-, num+, num., menu, num1, num2, num3, num4, num5, num6,
+num7, num8, num9, num0, mouseleft, mouseright, mousemiddle, mouseweelup, mouseweeldn, play/pause, play,
+pause, mute, volume+, volume-, nextsong, prevsong
 ```
 ## Check layout file layout.ini:
 ```
@@ -146,4 +160,32 @@ Key 04 programming to "4"
 Key 04 programming to code=0x21 mod=none
         Bind KEY04 to codes=('0x21',) mod=none
 DONE
+```
+
+# USB data exchange log scenario on Linux-based machines
+
+```sh
+# 1. Attach special-purposes-keyboard by USB
+
+# 2. Get USB bus number of keyboard USB connection:
+lsusb
+# Example out (keyboard is attached to bus 1):
+# Bus 001 Device 006: ID 1189:8890 Acer Communications & Multimedia
+
+# 3. Enable USB log by usbmon kernel module:
+sudo modprobe usbmon
+
+# 4. Write USB log to keyboard-program.log file (stay this console running while USB logging):
+sudo cat /sys/kernel/debug/usb/usbmon/1u >> keyboard-program.log
+
+# 5. Run "MINI KeyBoard.exe" on VirtualBox. Check USB access are granted
+
+# 6. Program
+# 6. Add label to USB log file (that help to analyze programming byte sequence):
+echo "DOWNLOAD KEY1 = A" >> keyboard-program.log
+# 6.1 program KEY1 = A with "MINI KeyBoard.exe"
+
+# 7. Repeat p.6 for another keys/mouse/LED programming
+
+# 8. Stop USB log (press <Ctrl+C> in console)
 ```
