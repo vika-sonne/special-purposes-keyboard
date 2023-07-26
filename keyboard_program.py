@@ -1,4 +1,4 @@
-#!/usr/bin/env python 
+#!/usr/bin/env python
 
 from sys import argv, exit
 from time import sleep
@@ -362,6 +362,18 @@ def bind_key_to_special_code_12(key: int, code: int):
 		ep.write(bytearray.fromhex(KEY12kc.format(key, code)))
 		ep.write(bytearray.fromhex(POST))
 
+def bind_led(mode: int):
+	'''
+	set LEDmode
+
+	mode         -:- 0..2
+	'''
+	if verbose > 0:
+		print(f'Set LEDmode to {mode:02}')
+	if not dry:
+		ep.write(bytearray.fromhex(PREF))
+		ep.write(bytearray.fromhex(LEDm.format(mode)))
+		ep.write(bytearray.fromhex(POST))
 
 # process command-line
 
@@ -420,8 +432,8 @@ if not dry:
 		print('Keyboard busy, abort')
 		exit(2)
 
-# programming encoders & keys
-re_encoder, re_keys = compile('^K(\d)$', IGNORECASE), compile('^KEYS$', IGNORECASE)
+# programming encoders, keys & leds
+re_encoder, re_keys, re_leds = compile('^K(\d)$', IGNORECASE), compile('^KEYS$', IGNORECASE), compile('^LED$', IGNORECASE)
 for section in config:
 	if (m := re_encoder.match(section)):
 		# encoder section # get number of encoder and symbol codes to bind
@@ -444,6 +456,21 @@ for section in config:
 					if verbose:
 						print(f'Key {number:02} programming to "{symbol}"')
 					bind_key(number, codes_and_special_keys[0], codes_and_special_keys[1])
+	elif (m := re_leds.match(section)):
+		# LED section # get mode
+		section = config[section]
+		for name, LEDmode in section.items():
+			try:
+				LEDmode = int(LEDmode)
+			except ValueError:
+				print(f'Wrong LED mode "{LEDmode}", skip this programming')
+			else:
+				if (name != "mode" or LEDmode not in range(3)):
+					print(f'Wrong LED mode "{name} = {LEDmode}", skip this programming')
+				else:
+					bind_led (LEDmode)
+
+
 
 if verbose:
 	print('DONE')

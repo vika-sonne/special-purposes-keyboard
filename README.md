@@ -31,13 +31,13 @@ symbol - keyboard/mouse action to do.
  ```
  multi-key sequence:
  a,b,c
- 
+
  with special keys:
  ctrl+shift+alt+meta+a
- 
+
  the same:
  c+s+a+m+a
- 
+
  multi-key sequence:
  c+s+a+m+a,b,c
 ```
@@ -56,6 +56,17 @@ press=enter
 3=a+s+c,d,e
 ```
 Available knobs and keys depends of special purposes keyboard model.
+
+For rgb leds mode, use LED section. Example:
+```
+[LED]
+mode=1
+```
+3 modes are available :
+- 0 : switched off
+- 1 : pulsing last pressed key (alternating RGB)
+- 2 : continuous 'snake like' pattern
+
 
 See layout file complete example: [layout.ini](/layout.ini)
 
