@@ -187,6 +187,7 @@ lsusb
 sudo modprobe usbmon
 
 # 4. Write USB log to keyboard-program.log file (stay this console running while USB logging):
+#    1u is for bus 1. You can also filter device using grep (... | grep 1:006 >> ...)
 sudo cat /sys/kernel/debug/usb/usbmon/1u >> keyboard-program.log
 
 # 5. Run "MINI KeyBoard.exe" on VirtualBox. Check USB access are granted
