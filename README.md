@@ -72,6 +72,13 @@ See layout file complete example: [layout.ini](/layout.ini)
 
 And another example: [layout_volume_play.ini](/layout_volume_play.ini)
 
+## Available keys
+Here's the mapping of the symbols usable in the layout files mapped on a ISO (105 keys) keyboard
+
+![iso105](/media/iso105-keyboard-layout.png)
+
+_Image created with http://www.keyboard-layout-editor.com_
+
 # Programming
 Be aware that USB subsystem access needs relevant rights. `sudo` for Kubuntu.
 

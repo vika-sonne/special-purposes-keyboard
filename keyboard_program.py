@@ -186,6 +186,8 @@ SYMBOLS_CODES = {
 	'mousemiddle': 0x04,
 	'mouseweelup': 0x01,
 	'mouseweeldn': 0xFF,
+	# iso international key
+	'int1': 0x64
 }
 
 def get_symbol_code(symbol: str | None) -> int | None:
