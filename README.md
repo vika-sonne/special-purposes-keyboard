@@ -27,7 +27,8 @@ key    - special purposes keyboard key;
 symbol - keyboard/mouse action to do.
 ```
 
- ### Symbols examples:
+### Symbols examples:
+
  ```
  multi-key sequence:
  a,b,c
@@ -72,8 +73,8 @@ See layout file complete example: [layout.ini](/layout.ini)
 
 And another example: [layout_volume_play.ini](/layout_volume_play.ini)
 
-## Available keys
-Here's the mapping of the symbols usable in the layout files mapped on a ISO (105 keys) keyboard
+### Available symbols
+Here's the list of the symbols usable in the layout files, mapped on a ISO (105 keys) keyboard
 
 ![iso105](/media/iso105-keyboard-layout.png)
 
