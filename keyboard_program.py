@@ -16,7 +16,7 @@ VENDOR, PRODUCT = 0x1189, 0x8890
 # Programming sequences
 START = '03000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000'
 PREF = '03a10100 00000000 00000000 00000000 00000000 00000000 00000000 00000000'
-# kcisc: key number, keys count, key sequence index, special keys (1 CTRL, 2 SHIFT, 4 ALT, 8 META/WIN), code (see SYMBOLS_CODES)
+# kcisc: key number, keys count, key sequence index, special keys (1 CTRL, 2 SHIFT, 4 ALT, 8 META/WIN, 64 ALTGR), code (see SYMBOLS_CODES)
 KEYkcisc = '03{:02X}11{:02X} {:02X}{:02X}{:02X}00 00000000 00000000 00000000 00000000 00000000 00000000'
 # kbws: key number, mouse button (1 LEFT, 2 RIGHT, 4 MIDDLE), mouse weel (1 UP, 0xFF DOWN), special keys (1 CTRL, 2 SHIFT, 4 ALT)
 MOUSEkbws = '03{:02X}13{:02X} 0000{:02X}{:02X} 00000000 00000000 00000000 00000000 00000000 00000000'
@@ -186,6 +186,8 @@ SYMBOLS_CODES = {
 	'mousemiddle': 0x04,
 	'mouseweelup': 0x01,
 	'mouseweeldn': 0xFF,
+	# iso international key
+	'int1': 0x64
 }
 
 def get_symbol_code(symbol: str | None) -> int | None:
@@ -204,6 +206,7 @@ def get_codes_and_special_keys(value: str) -> tuple[int | list[int], int] | None
 			case 'shift' | 's': return 2
 			case 'alt' | 'a': return 4
 			case 'meta' | 'win' | 'm' | 'w': return 8
+			case 'altgr': return 64
 			case _: return 0
 
 	codes, special_keys_value = [], 0
@@ -241,6 +244,8 @@ def dump_special_keys(special_keys: int) -> str:
 		ret += 'ALT+'
 	if special_keys & 8:
 		ret += 'META+'
+	if special_keys & 64:
+		ret += 'ALTGR+'
 	return ret[:-1] if ret else 'none'
 
 
@@ -267,7 +272,7 @@ def bind_key_to_symbol_code(key: int, symbol_code: int | list[int], special_keys
 	'''
 	key          -:- 1..KEYS_MAX_COUNT
 	symbol_code  -:- code or sequence: [code1, code2,..]
-	special keys -:- 1 CTRL, 2 SHIFT, 4 ALT, 8 META/WIN
+	special keys -:- 1 CTRL, 2 SHIFT, 4 ALT, 8 META/WIN, 64 ALTGR
 	'''
 	if type(symbol_code) is int:
 		symbol_code = (symbol_code,)
@@ -286,7 +291,7 @@ def bind_key_to_mouse(key: int, button: int, weel: int, special_keys: int = 0):
 	key          -:- 1..KEYS_MAX_COUNT
 	button       -:- 1 LEFT, 2 RIGHT, 4 MIDDLE
 	weel         -:- 1 UP, 0xFF DOWN
-	special keys -:- 1 CTRL, 2 SHIFT, 4 ALT, 8 META/WIN
+	special keys -:- 1 CTRL, 2 SHIFT, 4 ALT, 8 META/WIN, 64 ALTGR
 	'''
 	key, button, special_keys = key & 0xFF, button & 0xFF, special_keys & 0xFF
 	if verbose > 1:
@@ -300,7 +305,7 @@ def bind_key(key: int, symbol_code: int | list[int], special_keys: int = 0):
 	'''
 	key          -:- 1..KEYS_MAX_COUNT
 	symbol_code  -:- code or sequence: [code1, code2,..]
-	special keys -:- 1 CTRL, 2 SHIFT, 4 ALT, 8 META/WIN
+	special keys -:- 1 CTRL, 2 SHIFT, 4 ALT, 8 META/WIN, 64 ALTGR
 	'''
 	if verbose > 1:
 		if type(symbol_code) == int:
@@ -380,7 +385,7 @@ def bind_led(mode: int):
 def parse_args() -> object:
 	parser = ArgumentParser(
 		description='Programming utility of special purposes keyboard with encoders and keys.'
-		, epilog=f'Special keys: CTRL, SHIFT, ALT, META or WIN. Example: "ctrl+shift+alt+meta+<-" or "c+s+a+m+<-". Example multi-key sequence: "a,b,c" or "c+s+a+m+a,b,c". Known special keyboard USB Vendor:Product: {VENDOR:02X}:{PRODUCT:02X}. Known symbols:\n{", ".join("{}".format(s) for s in SYMBOLS_CODES)}, {", ".join("{}".format(s) for s in SPECIALS_CODES_12)}')
+		, epilog=f'Special keys: CTRL, SHIFT, ALT, ALTGR, META or WIN. Example: "ctrl+shift+alt+meta+<-" or "c+s+a+m+<-". Example multi-key sequence: "a,b,c" or "c+s+a+m+a,b,c". Known special keyboard USB Vendor:Product: {VENDOR:02X}:{PRODUCT:02X}. Known symbols:\n{", ".join("{}".format(s) for s in SYMBOLS_CODES)}, {", ".join("{}".format(s) for s in SPECIALS_CODES_12)}')
 	parser.add_argument('-l', '--layout', metavar='FILEPATH', default=DEFAULT_LAYOUT_FILEPATH, help=f'keyboard layout file path; default: {DEFAULT_LAYOUT_FILEPATH}')
 	parser.add_argument('-d', '--dry', action='store_true', help=f'don\'t iteract with keyboard. Set this option to validate keyboard layout file')
 	parser.add_argument('-v', '--verbose', '-v', action='count', default=0, help='verbose level; use multiple times to increase log level; example: -vv')
