@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from sys import argv, exit
 from time import sleep
@@ -144,7 +144,7 @@ SYMBOLS_CODES = {
 	# other keys of letter block: 3+2+3
 	'[{': 0x2F,
 	']}': 0x30,
-	'\|': 0x31,
+	r'\|': 0x31,
 	';:': 0x33,
 	'bracket': 0x34,
 	',<': 0x36,
@@ -438,7 +438,7 @@ if not dry:
 		exit(2)
 
 # programming encoders, keys & leds
-re_encoder, re_keys, re_leds = compile('^K(\d)$', IGNORECASE), compile('^KEYS$', IGNORECASE), compile('^LED$', IGNORECASE)
+re_encoder, re_keys, re_leds = compile(r'^K(\d)$', IGNORECASE), compile(r'^KEYS$', IGNORECASE), compile(r'^LED$', IGNORECASE)
 for section in config:
 	if (m := re_encoder.match(section)):
 		# encoder section # get number of encoder and symbol codes to bind
